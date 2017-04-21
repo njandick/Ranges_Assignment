@@ -1,0 +1,89 @@
+---
+title: "Ranges_Assignment"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r}
+source("http://bioconductor.org/biocLite.R")
+biocLite()
+```
+```{r}
+library(GenomicRanges)
+library(BiocInstaller)
+biocLite("GenomicFeatures")
+biocLite("TxDb.Mmusculus.UCSC.mm10.ensGene")
+library(TxDb.Mmusculus.UCSC.mm10.ensGene)
+library(rtracklayer)
+```
+## downloaded all necessary libraries 
+
+```{r}
+dbsnp137 <- import("/Users/Nicole/desktop/bds-files/chapter-09-working-with-range-data/mm10_snp137_chr1_trunc.bed.gz")
+```
+##loaded the variant file
+```{r}
+collapsed_exons <- reduce(exons(txdb), ignore.strand=TRUE)
+```
+#collapsed all exons that were overlapping
+
+```{r}
+chr1_collapsed_exons <- collapsed_exons[seqnames(collapsed_exons) == "chr1"]
+summary(width(dbsnp137))
+```
+#pulled out exons for only chromosome 1
+```{r}
+dbsnp137_resized <- dbsnp137 #created duplicate to work on
+zw_i <- width(dbsnp137_resized) == 0 #took out all variants with length '0'
+dbsnp137_resized[zw_i] <- resize(dbsnp137_resized[zw_i], width=1)#changed length from '0' to '1'
+```
+#Changed variants with length '0' to have length '1'
+```{r}
+hits <- findOverlaps(dbsnp137_resized, chr1_collapsed_exons, 
+  ignore.strand=TRUE)
+```
+#took out variants that overlap to exons on chromosome 1
+
+```{r}
+length(unique(queryHits(hits))) #puts out count of exon variants
+length(unique(queryHits(hits)))/length(dbsnp137_resized)# puts out proportion of exon variants compared to those that are not.
+```
+#gave amount of exon variants and proporiton of exon variants
+
+```{r}
+var_counts <- countOverlaps(chr1_collapsed_exons, dbsnp137_resized, ignore.strand=TRUE)
+```
+#found how many variants there are per exon
+
+```{r}
+chr1_collapsed_exons$num_vars <- var_counts
+```
+#created a column called num_vars that gives how many variants there are per exon
+```{r}
+setwd("Users/Nicole/desktop/EEOB546X-Spring2016/Genomic_Ranges_Assignment/")
+write.table(chr1_collapsed_exons, file = "Num_Var_per_Exon.txt", row.names = FALSE)
+```
+#created a file with the column with amount of variations per exon
