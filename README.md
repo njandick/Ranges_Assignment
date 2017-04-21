@@ -5,4 +5,4 @@ Three files included:
 
 2.READ_ME file
 
-3.Num_Var_exon.txt = Table with column saying number of variants per exon
+3.Num_Var_per_exon.txt = Table with column saying number of variants per exon
